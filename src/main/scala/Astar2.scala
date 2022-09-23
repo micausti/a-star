@@ -15,9 +15,9 @@ object Astar2 extends App {
 
   val startNode = Node(Coordinates(0, 0), None, 0.0)
   val goalNode  = Node(Coordinates(10, 10), None, 0.0) //TODO this shouldn't actually be a none, but just putting these here for now
-
   val openList: mutable.PriorityQueue[Node] = mutable.PriorityQueue(startNode)
   val closedList: List[Node]                = List.empty
+
   @tailrec
   def moveNodesToClosedList(
     goal: Node,
@@ -36,7 +36,7 @@ object Astar2 extends App {
     }
 
   def processNeighbours(neighbour: Node, openList: mutable.PriorityQueue[Node], closedList: List[Node]): (mutable.PriorityQueue[Node], List[Node]) =
-    if (shouldAddNode(neighbour, openList, closedList)) {
+    if (shouldAddNodeToOpenList(neighbour, openList, closedList)) {
       (openList.addOne(neighbour), closedList)
     } else {
       (openList, closedList)
@@ -53,7 +53,7 @@ object Astar2 extends App {
       true
     } else false
 
-  def shouldAddNode(neighbour: Node, openList: mutable.PriorityQueue[Node], closedList: List[Node]): Boolean = {
+  def shouldAddNodeToOpenList(neighbour: Node, openList: mutable.PriorityQueue[Node], closedList: List[Node]): Boolean = {
     val node = for {
       passedOpenListCheck   <- openListCheck(neighbour, openList)     //if this returns a None, we skip this neighbour and move on
       passedClosedListCheck <- closedListCheck(neighbour, closedList) //if this returns a none, we skip this neighbour, if it returns a Some, we add that to the open list
@@ -65,11 +65,6 @@ object Astar2 extends App {
   }
 
   def openListCheck(neighbour: Node, openList: mutable.PriorityQueue[Node]): Option[Node] =
-    //find out if neighbour is in the open list
-    //if no, then return the node for further processing
-    //if yes, compare the f values
-    //if the node already in the open list has a lower f value, return a none
-    //if the node already in the open list has a higher f value, return the node to be added to the open list
     nodeIsInOpenList(neighbour, openList) match {
       case None => Some(neighbour)
       case Some(existsInOpenList) =>
@@ -78,11 +73,6 @@ object Astar2 extends App {
         } else None
     }
   def closedListCheck(neighbour: Node, closedList: List[Node]): Option[Node] =
-    //find out if neighbour is already in the closed list
-    //if no, add it to the open list
-    //if yes, find out if it has a lower f
-    //if yes skip,
-    //if no, add to the open list
     nodeIsInClosedList(neighbour, closedList) match {
       case None => Some(neighbour)
       case Some(existsInClosedList) =>

@@ -1,60 +1,90 @@
-import Astar2.{Coordinates, Node, fIsSmallerThanListF}
+import Astar2.{Coordinates, Node, fIsSmallerThanListF, openListCheck, shouldAddNodeToOpenList}
 
 import scala.collection.mutable
 
-object AStarTest extends App {
-//TODO add in testing framework and fix tests
+class AStarTest extends munit.FunSuite {
 
   implicit val keyOrdering = new Ordering[Node] {
     override def compare(x: Node, y: Node): Int =
       x.toString.compareTo(y.toString)
   }
 
-  val neighbour1 = Node(Coordinates(5,4),None, 10)
-  val neighbour2 = Node(Coordinates(0,0),None, 10)
-  val neighbour3 = Node(Coordinates(0,1),None, 1)
-  val openList = mutable.PriorityQueue(neighbour1, neighbour2, neighbour3)
+  val neighbour1 = Node(Coordinates(5, 4), None, 10)
+  val neighbour2 = Node(Coordinates(0, 0), None, 10)
+  val neighbour3 = Node(Coordinates(0, 1), None, 1)
+  val openList   = mutable.PriorityQueue(neighbour1, neighbour2, neighbour3)
 
-  val firstNode = Node(Coordinates(5,4),None, 10)
-  val secondNode = Node(Coordinates(3,3),None, 1)
+  val firstNode  = Node(Coordinates(5, 4), None, 10)
+  val secondNode = Node(Coordinates(3, 3), None, 1)
   val closedList = List(firstNode, secondNode)
 
+  val existsInOpenListWithSmallerF = Node(Coordinates(0, 0), None, 1)
+  val doesNotExistInOpenList       = Node(Coordinates(3, 3), None, 1)
+  val existsInOpenListWithLargerF  = Node(Coordinates(0, 0), None, 11)
 
-  //OpenListCheck
-  val inOpenList = Node(Coordinates(0,0), None, 1)
-  val openListCheckResult = Astar2.openListCheck(inOpenList, openList)
-  println(openListCheckResult)
+  val existsInClosedListWithSmallerF = Node(Coordinates(0, 0), None, 1)
+  val doesNotExistInClosedList       = Node(Coordinates(3, 4), None, 1)
+  val existsInClosedListWithLargerF  = Node(Coordinates(3, 3), None, 11)
 
-  //ClosedListCheck
-  val isInClosedList = Node(Coordinates(5, 4), None, 1)
-  val closedListCheckResult = Astar2.closedListCheck(isInClosedList, closedList)
-  println(closedListCheckResult)
+  def openListCheckTest(name: String, node: Node, openList: mutable.PriorityQueue[Node], expected: Option[Node]) =
+    test(name) {
+      assertEquals(Astar2.openListCheck(node, openList), expected)
+    }
 
-  //Add to OpenList Check
-  val shouldBeAdded = Node(Coordinates(10, 10), None, 1) //not in either list
-  val addToOpenListCheck = Astar2.shouldAddNode(shouldBeAdded, openList, closedList)
-  println(addToOpenListCheck)
+  openListCheckTest(
+    "should add a node to the open list that already exists in the open list but has a smaller f value than the one already in there",
+    existsInOpenListWithSmallerF,
+    openList,
+    expected = Some(existsInOpenListWithSmallerF)
+  )
 
-  val shouldNotBeAdded = Node(Coordinates(5, 4), None, 10) //already in open List and doesn't have a better f
-  val addToOpenListFail = Astar2.shouldAddNode(shouldNotBeAdded, openList, closedList)
-  println(addToOpenListFail)
+  openListCheckTest(
+    "should add a node to the open list that does not already exist in the open list",
+    doesNotExistInOpenList,
+    openList,
+    expected = Some(doesNotExistInOpenList)
+  )
 
-  val shouldNotBeAdded2 = Node(Coordinates(3, 3), None, 10) //already in closed List and doesn't have a better f
-  val addToOpenListFail2 = Astar2.shouldAddNode(shouldNotBeAdded, openList, closedList)
-  println(addToOpenListFail2)
+  openListCheckTest(
+    "should not add a node to the open list that already exists in the open list but does not have a smaller f value than the one already in there",
+    existsInOpenListWithLargerF,
+    openList,
+    expected = None
+  )
 
+  def closedListCheckTest(name: String, node: Node, closedList: List[Node], expected: Option[Node]) =
+    test(name) {
+      assertEquals(Astar2.closedListCheck(node, closedList), expected)
+    }
 
-  //Moving nodes from open to closed list
-  val goal = Node(Coordinates(5, 5), None, 1)
-  val openList3 = mutable.PriorityQueue(firstNode, secondNode)
-  val closedList3 = List(Node(Coordinates(0, 0), None, 1))
-  val moveNodes = Astar2.moveNodesToClosedList(goal, openList3, closedList3)
-  println(moveNodes)
+  closedListCheckTest(
+    "should add a node to the open list that already exists in the closed list but has a smaller f value than the one already in there",
+    existsInClosedListWithSmallerF,
+    closedList,
+    expected = Some(existsInClosedListWithSmallerF)
+  )
 
-  //Moving nodes from open to closed list when priority queue is emtpy
-  val goal2 = Node(Coordinates(5, 5), None, 1)
-  val openList4 = mutable.PriorityQueue()
-  val closedList4 = List(Node(Coordinates(0, 0), None, 1))
-  val moveNodes2 = Astar2.moveNodesToClosedList(goal, openList4, closedList4)
-  println(moveNodes2)
+  closedListCheckTest(
+    "should add a node to the open list that does not already exist in the closed list",
+    doesNotExistInClosedList,
+    closedList,
+    expected = Some(doesNotExistInClosedList)
+  )
+
+  closedListCheckTest(
+    "should not add a node to the open list that already exists in the closed list but does not have a smaller f value than the one already in there",
+    existsInClosedListWithLargerF,
+    closedList,
+    expected = None
+  )
+
+  def shouldAddNodeTest(name: String, node: Node, openList: mutable.PriorityQueue[Node], closedList: List[Node], expected: Boolean) =
+    test(name) {
+      assertEquals(Astar2.shouldAddNodeToOpenList(node, openList, closedList), expected)
+    }
+
+  shouldAddNodeTest("should return false if it doesn't pass the openListCheck", existsInOpenListWithLargerF, openList, closedList, false)
+  shouldAddNodeTest("should return false if it doesn't pass the closedListCheck", existsInClosedListWithLargerF, openList, closedList, false)
+  shouldAddNodeTest("should return true if it passes both checks", existsInClosedListWithSmallerF, openList, closedList, true)
+
 }
