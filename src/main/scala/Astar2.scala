@@ -18,16 +18,28 @@ object Astar2 extends App {
 
   val openList: mutable.PriorityQueue[Node] = mutable.PriorityQueue(startNode)
   val closedList: List[Node]                = List.empty
-
-
   @tailrec
-  def moveNodesFromOpenListToClosedList(
+  def moveNodesToClosedList(
+    goal: Node,
     openList: mutable.PriorityQueue[Node],
     closedList: List[Node]
   ): (mutable.PriorityQueue[Node], List[Node]) =
     tryToGetFirstElementInList(openList) match {
-      case Success(node) => moveNodesFromOpenListToClosedList(openList, closedList ++ List(node)) //TODO get neighhours and update open list
-      case Failure(e)    => (openList, closedList)
+      case Success(node) =>
+        val neighbour: Node = Node(Coordinates(0,0), None, 1) //TODO try to do this first just with one neighbour, then add processing for all neighbours
+        if (neighbour.coordinates == goal.coordinates) {
+          moveNodesToClosedList(goal, openList, closedList ++ List(node))
+        } else {
+          processNeighbours(neighbour, openList, closedList)
+        }
+      case Failure(e) => (openList, closedList)
+    }
+
+  def processNeighbours(neighbour: Node, openList: mutable.PriorityQueue[Node], closedList: List[Node]): (mutable.PriorityQueue[Node], List[Node]) =
+    if (shouldAddNode(neighbour, openList, closedList)) {
+      (openList.addOne(neighbour), closedList)
+    } else {
+      (openList, closedList)
     }
 
   def tryToGetFirstElementInList(openList: mutable.PriorityQueue[Node]): Try[Node] = Try {
@@ -41,11 +53,16 @@ object Astar2 extends App {
       true
     } else false
 
-  def addNodeToOpenList(neighbour: Node, openList: mutable.PriorityQueue[Node], closedList: List[Node]): Option[Node] =
-    for {
+  def shouldAddNode(neighbour: Node, openList: mutable.PriorityQueue[Node], closedList: List[Node]): Boolean = {
+    val node = for {
       passedOpenListCheck   <- openListCheck(neighbour, openList)     //if this returns a None, we skip this neighbour and move on
       passedClosedListCheck <- closedListCheck(neighbour, closedList) //if this returns a none, we skip this neighbour, if it returns a Some, we add that to the open list
     } yield passedClosedListCheck
+    node match {
+      case Some(_) => true
+      case None    => false
+    }
+  }
 
   def openListCheck(neighbour: Node, openList: mutable.PriorityQueue[Node]): Option[Node] =
     //find out if neighbour is in the open list
@@ -76,6 +93,7 @@ object Astar2 extends App {
 
   def getNeighbours(q: Node): List[Node] =
     ???
+  //set parent to q
   //will need to calculate the fscore for each neighbour
   //val fScore: Double = gScore(node) + hScore(node.coordinates, goal.coordinates)
 
