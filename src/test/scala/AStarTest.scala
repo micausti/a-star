@@ -65,6 +65,19 @@ class AStarTest extends munit.FunSuite {
   shouldAddNodeTest("should return false if it doesn't pass the closedListCheck", existsInClosedListWithLargerF, openList, closedList, false)
   shouldAddNodeTest("should return true if it passes both checks", existsInClosedListWithSmallerF, openList, closedList, true)
 
+  test("make sure we get the right neighbours") {
+    val expected = List(
+      Node(Coordinates(1, 1), None, 0.0, 0.0, 0.0),
+      Node(Coordinates(2, 1), None, 0.0, 0.0, 0.0),
+      Node(Coordinates(3, 1), None, 0.0, 0.0, 0.0),
+      Node(Coordinates(1, 2), None, 0.0, 0.0, 0.0),
+      Node(Coordinates(3, 2), None, 0.0, 0.0, 0.0),
+      Node(Coordinates(1, 3), None, 0.0, 0.0, 0.0),
+      Node(Coordinates(2, 3), None, 0.0, 0.0, 0.0),
+      Node(Coordinates(3, 3), None, 0.0, 0.0, 0.0)
+    )
+    assertEquals(Astar2.getNeighbours(Node(Coordinates(2, 2), None, 0.0, 0.0, 0.0)), expected)
+  }
 }
 
 object Tests {
@@ -73,20 +86,20 @@ object Tests {
       x.toString.compareTo(y.toString)
   }
 
-  val neighbour1 = Node(Coordinates(5, 4), None, 10)
-  val neighbour2 = Node(Coordinates(0, 0), None, 10)
-  val neighbour3 = Node(Coordinates(0, 1), None, 1)
+  val neighbour1 = Node(Coordinates(5, 4), None, 10, 0.0, 0.0)
+  val neighbour2 = Node(Coordinates(0, 0), None, 10, 0.0, 0.0)
+  val neighbour3 = Node(Coordinates(0, 1), None, 1, 0.0, 0.0)
   val openList   = mutable.PriorityQueue(neighbour1, neighbour2, neighbour3)
 
-  val firstNode  = Node(Coordinates(5, 4), None, 10)
-  val secondNode = Node(Coordinates(3, 3), None, 1)
+  val firstNode  = Node(Coordinates(5, 4), None, 10, 0.0, 0.0)
+  val secondNode = Node(Coordinates(3, 3), None, 1, 0.0, 0.0)
   val closedList = List(firstNode, secondNode)
 
-  val existsInOpenListWithSmallerF = Node(Coordinates(0, 0), None, 1)
-  val doesNotExistInOpenList       = Node(Coordinates(3, 3), None, 1)
-  val existsInOpenListWithLargerF  = Node(Coordinates(0, 0), None, 11)
+  val existsInOpenListWithSmallerF = Node(Coordinates(0, 0), None, 1, 0.0, 0.0)
+  val doesNotExistInOpenList       = Node(Coordinates(3, 3), None, 1, 0.0, 0.0)
+  val existsInOpenListWithLargerF  = Node(Coordinates(0, 0), None, 11, 0.0, 0.0)
 
-  val existsInClosedListWithSmallerF = Node(Coordinates(0, 0), None, 1)
-  val doesNotExistInClosedList       = Node(Coordinates(3, 4), None, 1)
-  val existsInClosedListWithLargerF  = Node(Coordinates(3, 3), None, 11)
+  val existsInClosedListWithSmallerF = Node(Coordinates(0, 0), None, 1, 0.0, 0.0)
+  val doesNotExistInClosedList       = Node(Coordinates(3, 4), None, 1, 0.0, 0.0)
+  val existsInClosedListWithLargerF  = Node(Coordinates(3, 3), None, 11, 0.0, 0.0)
 }
