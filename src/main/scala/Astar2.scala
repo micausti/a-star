@@ -8,7 +8,7 @@ object Astar2 extends App {
   case class Coordinates(x: Int, y: Int)
   case class Node(coordinates: Coordinates, parent: Option[Node], h: Double, g: Double)
 
-  //TODO need an implicit for an ordering of Node -- not sure yet if this is really going to work
+  //TODO test to make sure this ordering works as expected
   implicit val keyOrdering = new Ordering[Node] {
     override def compare(x: Node, y: Node): Int =
       x.toString.compareTo(y.toString)
@@ -18,18 +18,6 @@ object Astar2 extends App {
   val goalNode                              = Node(Coordinates(10, 10), None, 0.0, 0.0)
   val openList: mutable.PriorityQueue[Node] = mutable.PriorityQueue(startNode)
   val closedList: List[Node]                = List.empty
-
-  def canFirstNodeBeMovedToClosedList(
-    goal: Node,
-    openList: mutable.PriorityQueue[Node],
-    closedList: List[Node]
-  ): (mutable.PriorityQueue[Node], List[Node]) =
-    Try {
-      openList.dequeue
-    } match {
-      case Success(node) => ???
-      case Failure(err)  => ???
-    }
 
   @tailrec
   def moveNodesToClosedList(
@@ -41,13 +29,21 @@ object Astar2 extends App {
       openList.dequeue
     } match {
       case Success(node) =>
+        println("processing first item on open list")
         if (node.coordinates == goal.coordinates) {
-          moveNodesToClosedList(goal, openList, closedList ++ List(node)) //Do we need to stop all processing if we get to this point or is it ok to keep going?
+          val closedListAtGoal = closedList ++ List(node)
+          println("reached goal")
+          println(s"coordinates to reach goal ${closedListAtGoal.map(_.coordinates)}")
+          (openList, closedListAtGoal)
         } else {
+          println("process neighbours")
           val neighbours: List[Node] = getNeighbours(node, goal)
-          processNeighbours(neighbours, openList, closedList)
+          println(s"neighbours ${neighbours}")
+          val newListsAfterProcessingNeighbours = processNeighbours(neighbours, openList, closedList)
+          moveNodesToClosedList(goal, newListsAfterProcessingNeighbours._1, closedList ++ List(node))
         }
       case Failure(err) =>
+        println("nothing else to process on open list")
         (openList, closedList) //If we can't get anything off the open list to process, then we will return the closed list and be finished
     }
 
@@ -60,8 +56,12 @@ object Astar2 extends App {
     neighbours match {
       case Nil => (openList, closedList)
       case x :: xs =>
+        println("processing list")
         if (shouldAddNodeToOpenList(x, openList, closedList)) {
+          println("should add node to open list")
           (openList.addOne(x), closedList)
+          println(s"open list $openList")
+          println(s"closed list $closedList")
         }
         processNeighbours(xs, openList, closedList)
     }
@@ -102,6 +102,7 @@ object Astar2 extends App {
     }
 
   //In this implementation we are going to get the 8 surrounding squares
+  //TODO need to handle neighbours that go off the grid - should these wrap around or be ignored?
   def getNeighbours(q: Node, goal: Node): List[Node] = {
     val node1       = Node(Coordinates(q.coordinates.x - 1, q.coordinates.y - 1), Some(q), 0.0, 0.0)
     val node2       = Node(Coordinates(q.coordinates.x, q.coordinates.y - 1), Some(q), 0.0, 0.0)

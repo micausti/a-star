@@ -115,7 +115,7 @@ class AStarTest extends munit.FunSuite {
     assertEquals(gscore, expected)
   }
 
-  test("process neighbours should correctly add nodes to the open  list") {
+  test("processNeighbours should add nodes to the open list if they aren't already there with a lower value") {
     val startNode: Node = Node(Coordinates(5, 5), None, 0.0, 0.0)
     val listOfNeighbours: List[Node] = List(
       Node(Coordinates(4, 4), None, 2.8284271247461903, 7.0710678118654755),
@@ -141,6 +141,52 @@ class AStarTest extends munit.FunSuite {
         Node(Coordinates(5, 6), None, 1.0, 7.0710678118654755),
         Node(Coordinates(6, 6), None, 0.0, 7.0710678118654755)
       ),
+      List()
+    )
+    assume(process == expected)
+  }
+
+  test("processNeighbours should NOT add nodes to the open list if they are already there with same f value") {
+    val startNode: Node = Node(Coordinates(5, 5), None, 0.0, 0.0)
+    val listOfNeighbours: List[Node] = List(
+      Node(Coordinates(4, 4), None, 2.8284271247461903, 7.0710678118654755)
+    )
+    val openList: mutable.PriorityQueue[Node] =
+      mutable.PriorityQueue(startNode, Node(Coordinates(4, 4), None, 2.8284271247461903, 7.0710678118654755))
+    val closedList: List[Node]                             = List.empty
+    val process: (mutable.PriorityQueue[Node], List[Node]) = Astar2.processNeighbours(listOfNeighbours, openList, closedList)
+    val expected: (mutable.PriorityQueue[Node], List[Node]) = (
+      mutable.PriorityQueue(),
+      List()
+    )
+    assume(process == expected)
+  }
+
+  test("processNeighbours should NOT add nodes to the open list if they are already there with lower f value") {
+    val startNode: Node = Node(Coordinates(5, 5), None, 0.0, 0.0)
+    val listOfNeighbours: List[Node] = List(
+      Node(Coordinates(4, 4), None, 2.8284271247461903, 7.0710678118654755)
+    )
+    val openList: mutable.PriorityQueue[Node] =
+      mutable.PriorityQueue(startNode, Node(Coordinates(4, 4), None, 1.0, 1.0))
+    val closedList: List[Node] = List.empty
+    val process: (mutable.PriorityQueue[Node], List[Node]) = Astar2.processNeighbours(listOfNeighbours, openList, closedList)
+    val expected: (mutable.PriorityQueue[Node], List[Node]) = (
+      mutable.PriorityQueue(),
+      List()
+    )
+    assume(process == expected)
+  }
+
+  test("moveNodesToClosedList should find the shortest path to the goal") {
+    val goal = Node(Coordinates(5,5), None, 0.0, 0.0)
+    val startNode = Node(Coordinates(0,0), None, 0.0, 0.0)
+    val openList: mutable.PriorityQueue[Node] =
+      mutable.PriorityQueue(startNode)
+    val closedList: List[Node] = List.empty
+    val process = Astar2.moveNodesToClosedList(goal, openList, closedList)
+    val expected: (mutable.PriorityQueue[Node], List[Node]) = (
+      mutable.PriorityQueue(),
       List()
     )
     assume(process == expected)
